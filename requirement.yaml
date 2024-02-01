@@ -1,0 +1,197 @@
+swagger: '2.0'
+info:
+  version: '1.0.0'
+  title: 'BTC application'
+  description: |
+    You need to implement an API service that will allow you to:
+    1. Get the current BTC UAH rate.
+    2. Subscribe emails to receive the exchange rate.
+    3. Send current rate to all subscribed emails.
+
+    Business requirements:
+    - get current bitcoin (BTC) rate in hryvnia (UAH)
+    - subscribe email to receive information about the change in the exchange rate
+    - send current rate to all subscribed users
+
+    Technical details:
+    - service application:
+        - unsubscribe email flow
+        - get all emails both subscribed and unsubscribed flow with statuses
+        - send metrics to prometheus flow:
+            - subscribe email count
+            - unsubscribe email count
+            - send email count
+            - send email error count
+            - exchange rate gauge
+        - get prometheus metrics flow
+    - worker application:
+        - scrape metrics by worker
+        - store to metrics table
+
+    Additional requirements:
+    1. The service must comply with the API described below. Do not protect the API with an authentication layer.
+    2. All data for the application must be stored in database.
+    3. The repository must have a docker-compose.yml that allows you to run the system in Docker: 
+        - service application
+        - worker application
+        - database
+    4. You can also add comments or a description of the logic of the work in the README.md document. The correct logic can be an advantage when evaluating if you do not fully complete the task.
+
+    Expected tech stack:
+    - NestJS
+    - TypeScript
+    - PostgreSQL
+    - Prisma
+    - Docker
+    - Prometheus
+
+    Optional:
+    - Use CQRS pattern with nestjs lib
+    - Replace default logger with Pino logger and add request id to logs
+    - Add unit tests
+    - Add daily exchange rate email at 9:00 AM Kyiv time
+    - Fetch exchange rate hourly and send email if exchange rate changed more than 5% since last email
+
+    Docker compose components:
+    - service_app
+    - worker_app
+    - database
+
+    Completed task must be uploaded to GitHub (public repository) and sent back to recruiter as a link to the repository.
+
+    You can use all available information, but do the task by yourself.
+    Feel free to ask any questions.
+
+    Good luck!
+---
+host: 'localhost'
+basePath: '/api'
+tags:
+  - name: 'rate'
+    description: 'Get BTC UAH rate'
+  - name: 'subscription'
+    description: 'Subscription operations'
+  - name: 'metrics'
+    description: 'Metrics operations'
+schemes:
+  - 'http'
+paths:
+  /rate:
+    get:
+      tags:
+        - 'rate'
+      summary: 'Get current BTC UAH rate'
+      description: 'Request should return current BTC UAH rate using any third-party service with a public API'
+      produces:
+        - 'application/json'
+      responses:
+        '200':
+          description: 'Returns current BTC UAH rate'
+          schema:
+            type: 'number'
+        '400':
+          description: 'Invalid status value'
+    post:
+      tags:
+        - 'subscription'
+      summary: 'Send e-mail with current rate to all subscribed emails'
+      description: |
+        Get the current BTC UAH rate using any third-party service with a public API and send it to all e-mail addresses that were subscribed earlier.
+      produces:
+        - 'application/json'
+      responses:
+        '200':
+          description: 'Rate successfully sent to active subscriptions'
+          schema:
+            type: 'object'
+            properties:
+              message:
+                type: 'string'
+              emails:
+                type: 'array'
+                items:
+                  type: 'string'
+  /emails:
+    get:
+      tags:
+        - 'subscription'
+      summary: 'Get all emails'
+      description: 'Request should return all emails with statuses'
+      produces:
+        - 'application/json'
+      responses:
+        '200':
+          description: 'Returns all emails with statuses'
+          schema:
+            type: 'array'
+            items:
+              type: 'object'
+              properties:
+                email:
+                  type: 'string'
+                status:
+                  type: 'string'
+                  enum:
+                    - 'subscribed'
+                    - 'unsubscribed'
+                createdAt:
+                  type: 'string'
+                  format: 'date-time'
+                deletedAt:
+                  type: 'string'
+                  format: 'date-time'
+    post:
+      tags:
+        - 'subscription'
+      summary: 'Subscribe email to receive current rate'
+      description: 'Request should check if there is no such email in the current database and, if it is not, write it. Later, using another request, we will send a letter to those e-mail addresses that will be in this database.'
+      consumes:
+        - 'application/json'
+      produces:
+        - 'application/json'
+      parameters:
+        - name: 'email'
+          in: 'body'
+          description: 'Email to subscribe'
+          required: true
+          type: 'string'
+      responses:
+        '200':
+          description: 'E-mail added'
+        '409':
+          description: 'E-mail already exists'
+    delete:
+      tags:
+        - 'subscription'
+      summary: 'Unsubscribe email'
+      description: 'Request should check if there is such an email in the current database and, if it is, mark it as deleted.'
+      consumes:
+        - 'application/json'
+      produces:
+        - 'application/json'
+      parameters:
+        - name: 'email'
+          in: 'body'
+          description: 'Email to unsubscribe'
+          required: true
+          type: 'string'
+      responses:
+        '200':
+          description: 'E-mail deleted'
+        '404':
+          description: 'E-mail not found'
+  /metrics:
+    get:
+      tags:
+        - 'metrics'
+      summary: 'Get prometheus metrics'
+      description: 'Request should return prometheus metrics'
+      produces:
+        - 'application/json'
+      responses:
+        '200':
+          description: 'Returns prometheus metrics'
+          schema:
+            type: 'string'
+        '404':
+          description: 'Metrics not found'
