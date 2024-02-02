@@ -25,7 +25,18 @@
         - get prometheus metrics flow
     - worker application:
         - scrape metrics by worker
-        - store to metrics tableі
+        - store to metrics table
+
+`Tech stack:`
+
+    - ExpressJS
+    - TypeScript
+    - PostgreSQL
+    - DrizzleORM
+
+<!-- - Docker
+    - Prometheus -->
+
 ## Prerequisites
 
 This project requires NodeJS (version 8 or later) and NPM.
