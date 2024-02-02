@@ -1,6 +1,9 @@
 import axios from "axios";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
+import { sql } from "drizzle-orm";
+import { newMetricSchema } from "../db/schema/metrics";
+import connect from "../db/dbConnect";
 
 const sgMail = require("@sendgrid/mail");
 dotenv.config();
@@ -17,6 +20,22 @@ export const getRate = async (req: Request, res: Response) => {
       response.data.data.amount
     ) {
       const rate = parseFloat(response.data.data.amount);
+
+      const db = await connect();
+      const metrics = await db.select().from(newMetricSchema).execute();
+
+      if (metrics[0]?.exchangeRate !== null) {
+        const exchangeRateValue = `${rate}`;
+
+        const metricId = process.env.METRIC_ID;
+        await db
+          .update(newMetricSchema)
+          .set({
+            exchangeRate: exchangeRateValue,
+          })
+          .where(sql`${newMetricSchema.id} = ${metricId}`)
+          .execute();
+      }
 
       return res.status(200).json(rate);
     } else {
@@ -52,10 +71,44 @@ export const postRate = async (req: Request, res: Response) => {
       };
 
       await sgMail.send(msg);
+
+      const db = await connect();
+      const metrics = await db.select().from(newMetricSchema).execute();
+
+      if (metrics[0]?.sendCount !== null && metrics[0]?.exchangeRate !== null) {
+        const sendCountValue = ++metrics[0].sendCount;
+        const exchangeRateValue = `${bitcoinRate}`;
+
+        const metricId = process.env.METRIC_ID;
+        await db
+          .update(newMetricSchema)
+          .set({
+            sendCount: sendCountValue,
+            exchangeRate: exchangeRateValue,
+          })
+          .where(sql`${newMetricSchema.id} = ${metricId}`)
+          .execute();
+      }
     }
 
     return res.status(200).send("Rate successfully sent to active subscriptions");
   } catch (error) {
+    const db = await connect();
+    const metrics = await db.select().from(newMetricSchema).execute();
+
+    if (metrics[0]?.sendErrorCount !== null) {
+      const sendErrorCountValue = ++metrics[0].sendErrorCount;
+
+      const metricId = process.env.METRIC_ID;
+      await db
+        .update(newMetricSchema)
+        .set({
+          sendErrorCount: sendErrorCountValue,
+        })
+        .where(sql`${newMetricSchema.id} = ${metricId}`)
+        .execute();
+    }
+
     console.error("Error:", error);
     return res.status(500).send("Internal Server Error");
   }

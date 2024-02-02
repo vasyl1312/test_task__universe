@@ -1,8 +1,10 @@
 import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { Request, Response } from "express";
 import connect from "../db/dbConnect";
 import { newUserSchema, TNewUser } from "../db/schema/users";
+import { newMetricSchema } from "../db/schema/metrics";
 
 export const addEmail = async (req: Request, res: Response) => {
   try {
@@ -26,6 +28,20 @@ export const addEmail = async (req: Request, res: Response) => {
     };
 
     await db.insert(newUserSchema).values(newUser).execute();
+
+    const metrics = await db.select().from(newMetricSchema).execute();
+    if (metrics[0]?.subscribeCount !== null) {
+      const subscribeCountValue = ++metrics[0].subscribeCount;
+
+      const metricId = process.env.METRIC_ID;
+      await db
+        .update(newMetricSchema)
+        .set({
+          subscribeCount: subscribeCountValue,
+        })
+        .where(sql`${newMetricSchema.id} = ${metricId}`)
+        .execute();
+    }
 
     return res.status(200).send("E-mail added");
   } catch (error) {
@@ -51,6 +67,20 @@ export const deleteEmail = async (req: Request, res: Response) => {
     }
 
     await db.delete(newUserSchema).where(eq(newUserSchema.email, email)).execute();
+
+    const metrics = await db.select().from(newMetricSchema).execute();
+    if (metrics[0]?.unsubscribeCount !== null) {
+      const unsubscribeCountValue = ++metrics[0].unsubscribeCount;
+
+      const metricId = process.env.METRIC_ID;
+      await db
+        .update(newMetricSchema)
+        .set({
+          unsubscribeCount: unsubscribeCountValue,
+        })
+        .where(sql`${newMetricSchema.id} = ${metricId}`)
+        .execute();
+    }
 
     return res.status(200).send("E-mail deleted");
   } catch (error) {

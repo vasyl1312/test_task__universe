@@ -34,9 +34,9 @@
     - PostgreSQL
     - DrizzleORM
     - SendGrid
+    - Prometheus
 
-<!-- - Docker
-    - Prometheus -->
+<!-- - Docker -->
 
 ## Prerequisites
 
