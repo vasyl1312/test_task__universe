@@ -1,7 +1,31 @@
 # Test Universe
 
 [Requirement](./requirement.yaml)
+[Swagger](./swagger.yaml)
 
+### Description:
+
+`Business requirements:`
+
+- get current bitcoin (BTC) rate in hryvnia (UAH)
+- subscribe email to receive information about the change in the exchange rate
+- send current rate to all subscribed users
+
+`Technical details:`
+
+    - service application:
+        - unsubscribe email flow
+        - get all emails both subscribed and unsubscribed flow with statuses
+        - send metrics to prometheus flow:
+            - subscribe email count
+            - unsubscribe email count
+            - send email count
+            - send email error count
+            - exchange rate gauge
+        - get prometheus metrics flow
+    - worker application:
+        - scrape metrics by worker
+        - store to metrics tableі
 ## Prerequisites
 
 This project requires NodeJS (version 8 or later) and NPM.

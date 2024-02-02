@@ -1,0 +1,2 @@
+DROP TABLE user;
+ALTER TABLE "users" ALTER COLUMN "email" SET DATA TYPE varchar(50);

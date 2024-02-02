@@ -8,6 +8,27 @@
       "when": 1706706440100,
       "tag": "0000_unique_patriot",
       "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1706878727410,
+      "tag": "0001_curvy_red_hulk",
+      "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1706879001931,
+      "tag": "0002_gigantic_paibok",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1706879244030,
+      "tag": "0003_thin_mercury",
+      "breakpoints": false
     }
   ]
 }

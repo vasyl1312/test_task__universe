@@ -1,0 +1,131 @@
+host: "localhost"
+basePath: "/api"
+tags:
+  - name: "rate"
+    description: "Get BTC UAH rate"
+  - name: "subscription"
+    description: "Subscription operations"
+  - name: "metrics"
+    description: "Metrics operations"
+schemes:
+  - "http"
+paths:
+  /rate:
+    get:
+      tags:
+        - "rate"
+      summary: "Get current BTC UAH rate"
+      description: "Request should return current BTC UAH rate using any third-party service with a public API"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Returns current BTC UAH rate"
+          schema:
+            type: "number"
+        "400":
+          description: "Invalid status value"
+    post:
+      tags:
+        - "subscription"
+      summary: "Send e-mail with current rate to all subscribed emails"
+      description: |
+        Get the current BTC UAH rate using any third-party service with a public API and send it to all e-mail addresses that were subscribed earlier.
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Rate successfully sent to active subscriptions"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+              emails:
+                type: "array"
+                items:
+                  type: "string"
+  /emails:
+    get:
+      tags:
+        - "subscription"
+      summary: "Get all emails"
+      description: "Request should return all emails with statuses"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Returns all emails with statuses"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                email:
+                  type: "string"
+                status:
+                  type: "string"
+                  enum:
+                    - "subscribed"
+                    - "unsubscribed"
+                createdAt:
+                  type: "string"
+                  format: "date-time"
+                deletedAt:
+                  type: "string"
+                  format: "date-time"
+    post:
+      tags:
+        - "subscription"
+      summary: "Subscribe email to receive current rate"
+      description: "Request should check if there is no such email in the current database and, if it is not, write it. Later, using another request, we will send a letter to those e-mail addresses that will be in this database."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "email"
+          in: "body"
+          description: "Email to subscribe"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "E-mail added"
+        "409":
+          description: "E-mail already exists"
+    delete:
+      tags:
+        - "subscription"
+      summary: "Unsubscribe email"
+      description: "Request should check if there is such an email in the current database and, if it is, mark it as deleted."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "email"
+          in: "body"
+          description: "Email to unsubscribe"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "E-mail deleted"
+        "404":
+          description: "E-mail not found"
+  /metrics:
+    get:
+      tags:
+        - "metrics"
+      summary: "Get prometheus metrics"
+      description: "Request should return prometheus metrics"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Returns prometheus metrics"
+          schema:
+            type: "string"
+        "404":
+          description: "Metrics not found"
