@@ -33,6 +33,7 @@
     - TypeScript
     - PostgreSQL
     - DrizzleORM
+    - SendGrid
 
 <!-- - Docker
     - Prometheus -->
